@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class SphericalGridSpawner : MonoBehaviour
 {
@@ -13,15 +15,21 @@ public class SphericalGridSpawner : MonoBehaviour
     [Header("Player Reference")]
     public Transform player; // Reference to the player
 
+    [Header("Colors")]
+    public List<Color> colors; // List of colors to randomly assign
+
+    private List<GameObject> spawnedObjects = new List<GameObject>(); // To store references to spawned objects
+
     void Start()
     {
-        if (objectPrefab == null || player == null)
+        if (objectPrefab == null || player == null || colors.Count == 0)
         {
-            Debug.LogError("Please assign the object prefab and player transform in the Inspector.");
+            Debug.LogError("Please assign the object prefab, player transform, and provide a list of colors in the Inspector.");
             return;
         }
 
         SpawnObjectsOnSphere();
+        StartCoroutine(ChangeRandomSphereColorsCoroutine()); // Start the color change coroutine
     }
 
     void SpawnObjectsOnSphere()
@@ -45,9 +53,50 @@ public class SphericalGridSpawner : MonoBehaviour
                 Vector3 spawnPosition = player.position + offset * radius;
 
                 // Instantiate the object at the calculated position
-                Instantiate(objectPrefab, spawnPosition, Quaternion.identity, transform);
+                GameObject spawnedObject = Instantiate(objectPrefab, spawnPosition, Quaternion.identity, transform);
+
+                // Add the spawned object to the list
+                spawnedObjects.Add(spawnedObject);
             }
         }
+    }
+
+    IEnumerator ChangeRandomSphereColorsCoroutine()
+    {
+        while (true) // This will run indefinitely, you can modify the condition as needed
+        {
+            foreach (GameObject obj in spawnedObjects)
+            {
+                // Choose a random color from the list
+                Color randomColor = colors[Random.Range(0, colors.Count)];
+                Renderer renderer = obj.GetComponent<Renderer>();
+
+                if (renderer != null)
+                {
+                    // Gradually change to the random color
+                    StartCoroutine(ChangeColorOverTime(renderer, randomColor, 2f)); // 2 seconds to change color
+                }
+            }
+
+            // Wait for a specific time before changing colors again
+            yield return new WaitForSeconds(2f); // Change every 2 seconds (or adjust as needed)
+        }
+    }
+
+    IEnumerator ChangeColorOverTime(Renderer renderer, Color targetColor, float duration)
+    {
+        Color initialColor = renderer.material.color;
+        float timeElapsed = 0f;
+
+        while (timeElapsed < duration)
+        {
+            renderer.material.color = Color.Lerp(initialColor, targetColor, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Ensure the final color is set
+        renderer.material.color = targetColor;
     }
 
     Vector3 SphericalToCartesian(float theta, float phi, Vector3 pole)

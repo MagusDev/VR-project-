@@ -27,24 +27,14 @@ public class PeripheralColorTest : MonoBehaviour
 
     void Update()
     {
-        // Keep the grid centered on the player's head
-        transform.position = playerHead.position;
+        // Keep the grid centered on the player's forward direction
+        transform.position = playerHead.position + playerHead.forward * gridRadius;
 
-        // Ensure the user is focusing on the fixation point
-        if (isTestRunning)
-        {
-            Vector3 lookDirection = playerHead.forward;
-            Vector3 toFixation = transform.position - playerHead.position;
-
-            // Prevent head movement by calculating dot product
-            if (Vector3.Dot(lookDirection.normalized, toFixation.normalized) < 0.9f)
-            {
-                Debug.LogWarning("Focus on the central fixation point!");
-            }
-        }
+        // Ensure the grid faces the player
+        transform.rotation = Quaternion.LookRotation(playerHead.position - transform.position);
     }
 
-    // Creates the spherical grid of objects around the player's head
+    // Creates the spherical grid of objects in front of the player's vision
     void CreateSphericalGrid()
     {
         for (int i = 0; i < gridResolution; i++)
@@ -58,9 +48,12 @@ public class PeripheralColorTest : MonoBehaviour
                 // Convert to Cartesian coordinates
                 Vector3 localPosition = new Vector3(
                     gridRadius * Mathf.Sin(theta) * Mathf.Cos(phi),
-                    gridRadius * Mathf.Cos(theta),
-                    gridRadius * Mathf.Sin(theta) * Mathf.Sin(phi)
+                    gridRadius * Mathf.Sin(theta) * Mathf.Sin(phi),
+                    gridRadius * Mathf.Cos(theta)
                 );
+
+                // Offset so spheres are distributed around the player's forward direction
+                localPosition = Quaternion.LookRotation(playerHead.forward) * localPosition;
 
                 // Instantiate sphere and parent it to the grid object
                 GameObject sphere = Instantiate(spherePrefab, transform);
