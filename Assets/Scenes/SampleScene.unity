@@ -993,7 +993,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 495083884}
-  - component: {fileID: 495083883}
+  - component: {fileID: 495083885}
   m_Layer: 0
   m_Name: Grid Spawner
   m_TagString: Untagged
@@ -1001,23 +1001,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &495083883
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 495083882}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c9e977056acf154f91647456b71b8c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 6130382928192468278, guid: 7275322a159d0914791f9c6654d30cec, type: 3}
-  rows: 40
-  columns: 40
-  radius: 7
-  player: {fileID: 1717954561192151876}
 --- !u!4 &495083884
 Transform:
   m_ObjectHideFlags: 0
@@ -1026,13 +1009,34 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 495083882}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.25664127, y: 0.4207065, z: -1.6908183}
+  m_LocalPosition: {x: 0.25664127, y: 1.7821465, z: -1.6908183}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1195545112}
-  m_RootOrder: 0
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &495083885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 495083882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 554dd5cd8f796cd49afdfc9810758d41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spherePrefab: {fileID: 6130382928192468278, guid: 7275322a159d0914791f9c6654d30cec, type: 3}
+  gridRadius: 5
+  gridResolution: 10
+  displayTime: 2
+  testColors:
+  - {r: 1, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0, b: 1, a: 0}
+  - {r: 0, g: 1, b: 0, a: 0}
+  playerHead: {fileID: 1195545112}
 --- !u!1 &572027493
 GameObject:
   m_ObjectHideFlags: 0
@@ -2396,8 +2400,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 495083884}
+  m_Children: []
   m_Father: {fileID: 1245564473}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
