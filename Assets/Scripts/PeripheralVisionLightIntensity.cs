@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class PeripheralColorTest : MonoBehaviour
+public class PeripheralVisionLightIntensity : MonoBehaviour
 {
     [Header("Object to Spawn")]
     public GameObject objectPrefab;
@@ -11,6 +11,7 @@ public class PeripheralColorTest : MonoBehaviour
     public int rows = 10;
     public int columns = 10;
     public float radius = 5f;
+    public float intensityIncreaseRate = 5f;
     public float pulseDuration = 0.5f;
     public float delayBetweenPulses = 0.1f;
     public int simultaneousPulses = 5;
@@ -40,7 +41,7 @@ public class PeripheralColorTest : MonoBehaviour
         }
 
         SpawnObjectsOnSphere();
-        StartCoroutine(ChangeObjectColorCoroutine());
+        StartCoroutine(IncreaseLightIntensityCoroutine());
     }
 
     void SpawnObjectsOnSphere()
@@ -62,7 +63,7 @@ public class PeripheralColorTest : MonoBehaviour
         }
     }
 
-    IEnumerator ChangeObjectColorCoroutine()
+    IEnumerator IncreaseLightIntensityCoroutine()
     {
         while (true)
         {
@@ -71,7 +72,7 @@ public class PeripheralColorTest : MonoBehaviour
 
             foreach (int index in randomIndices)
             {
-                StartCoroutine(PulseObjectColor(spawnedObjects[index]));
+                StartCoroutine(PulseLightIntensity(spawnedObjects[index]));
             }
 
             selectCenter = !selectCenter; // Toggle selection group
@@ -79,26 +80,24 @@ public class PeripheralColorTest : MonoBehaviour
         }
     }
 
-    IEnumerator PulseObjectColor(GameObject targetObject)
+    IEnumerator PulseLightIntensity(GameObject targetObject)
     {
         if (targetObject == null) yield break;
 
-        Renderer renderer = targetObject.GetComponent<Renderer>();
-        if (renderer == null) yield break;
+        Light pointLight = targetObject.GetComponentInChildren<Light>();
+        if (pointLight == null) yield break;
 
-        Color originalColor = renderer.material.color;
-        Color newColor = colors[Random.Range(0, colors.Count)];
-
+        float originalIntensity = pointLight.intensity;
         float elapsedTime = 0f;
 
         while (elapsedTime < pulseDuration)
         {
-            renderer.material.color = Color.Lerp(originalColor, newColor, elapsedTime / pulseDuration);
+            pointLight.intensity = Mathf.Lerp(originalIntensity, originalIntensity + intensityIncreaseRate, elapsedTime / pulseDuration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        renderer.material.color = originalColor; // Reset to the original color
+        pointLight.intensity = originalIntensity;
     }
 
     List<int> GetRandomObjectIndices(int count, bool selectCenter)

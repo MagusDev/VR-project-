@@ -8,148 +8,140 @@ public class PeripheralVisionMotion : MonoBehaviour
     public GameObject objectPrefab;
 
     [Header("Grid Parameters")]
-    public int rows = 10; // Number of latitude divisions
-    public int columns = 10; // Number of longitude divisions
-    public float radius = 5f; // Radius of the sphere
-    public float jiggleFrequency = 5f;
-    public float jiggleIntensity = 5f;
+    public int rows = 10;
+    public int columns = 10;
+    public float radius = 5f;
+    public float pulseDuration = 0.5f;
+    public float delayBetweenPulses = 0.1f;
+    public int simultaneousPulses = 5;
 
     [Header("Player Reference")]
-    public Transform player; // Reference to the player
+    public Transform player;
 
-    [Header("Colors")]
-    public List<Color> colors; // List of colors to randomly assign
+    [Header("Field Definitions")]
+    [Range(0.0f, 1.0f)] public float centerThreshold = 0.6f; // Center threshold
+    [Range(-1.0f, 1.0f)] public float edgeThreshold = 0.3f;   // Edge threshold
 
-    private List<GameObject> spawnedObjects = new List<GameObject>(); // To store references to spawned objects
+    [Header("Selection Parameters")]
+    public int startRow = 5; // Only select objects starting from this row (0-based index)
+
+    private List<GameObject> spawnedObjects = new List<GameObject>();
+    private Dictionary<GameObject, Vector3> originalPositions = new Dictionary<GameObject, Vector3>();
+    private bool selectCenter = true; // Toggle for alternating selection
 
     void Start()
     {
-        if (objectPrefab == null || player == null || colors.Count == 0)
+        if (objectPrefab == null || player == null)
         {
-            Debug.LogError("Please assign the object prefab, player transform, and provide a list of colors in the Inspector.");
+            Debug.LogError("Please assign the object prefab and player transform in the Inspector.");
             return;
         }
 
         SpawnObjectsOnSphere();
-        StartCoroutine(JiggleRandomObjectCoroutine(jiggleIntensity, jiggleFrequency, 2f)); // Start the jiggle effect coroutine
+        StartCoroutine(JiggleObjectsCoroutine());
     }
 
     void SpawnObjectsOnSphere()
     {
-        Vector3 poleDirection = player.forward.normalized; // Player's forward direction as the pole
+        Vector3 poleDirection = player.forward.normalized;
 
         for (int i = 0; i < rows; i++)
         {
-            // Latitude angle (from 0 to π)
             float theta = Mathf.PI * i / (rows - 1);
 
             for (int j = 0; j < columns; j++)
             {
-                // Longitude angle (from 0 to 2π)
                 float phi = 2 * Mathf.PI * j / columns;
-
-                // Calculate position on the sphere's surface relative to the pole
                 Vector3 offset = SphericalToCartesian(theta, phi, poleDirection);
-
-                // Calculate spawn position relative to the player's position
                 Vector3 spawnPosition = player.position + offset * radius;
-
-                // Instantiate the object at the calculated position
                 GameObject spawnedObject = Instantiate(objectPrefab, spawnPosition, Quaternion.identity, transform);
-
-                // Add the spawned object to the list
                 spawnedObjects.Add(spawnedObject);
+                originalPositions[spawnedObject] = spawnPosition;
             }
         }
     }
 
-    IEnumerator JiggleRandomObjectCoroutine(float intensity, float frequency, float jiggleDuration)
+    IEnumerator JiggleObjectsCoroutine()
     {
-        Vector3[] originalPositions = new Vector3[spawnedObjects.Count];
-
-        // Store original positions
-        for (int i = 0; i < spawnedObjects.Count; i++)
-        {
-            originalPositions[i] = spawnedObjects[i].transform.position;
-        }
-
         while (true)
         {
-            // Select a random object in front of the player
-            int randomIndex = GetRandomObjectIndex();
-            GameObject targetObject = spawnedObjects[randomIndex];
+            // Alternate between center and edge groups
+            List<int> randomIndices = GetRandomObjectIndices(simultaneousPulses, selectCenter);
 
-            if (targetObject != null)
+            foreach (int index in randomIndices)
             {
-                Vector3 originalPosition = originalPositions[randomIndex];
-
-                // Jiggle the selected object for a duration
-                float elapsedTime = 0f;
-                while (elapsedTime < jiggleDuration)
-                {
-                    Vector3 jiggleOffset = new Vector3(
-                        Mathf.Sin(Time.time * frequency) * intensity,
-                        Mathf.Cos(Time.time * frequency) * intensity,
-                        Mathf.Sin(Time.time * frequency * 0.5f) * intensity
-                    );
-
-                    targetObject.transform.position = originalPosition + jiggleOffset;
-                    elapsedTime += Time.deltaTime;
-
-                    yield return null; // Wait for the next frame
-                }
-
-                // Reset the object to its original position
-                targetObject.transform.position = originalPosition;
+                StartCoroutine(JiggleObject(spawnedObjects[index]));
             }
 
-            // Wait before selecting the next object
-            yield return new WaitForSeconds(0.2f); // Adjust as needed
+            selectCenter = !selectCenter; // Toggle selection group
+            yield return new WaitForSeconds(delayBetweenPulses);
         }
     }
 
-    int GetRandomObjectIndex()
+    IEnumerator JiggleObject(GameObject targetObject)
     {
-        // Filter objects to only include those in front of the player
-        List<int> frontIndices = new List<int>();
-        Vector3 playerDirection = player.forward;
+        if (targetObject == null) yield break;
 
-        for (int i = 0; i < spawnedObjects.Count; i++)
+        Vector3 relativeOriginalPosition;
+        if (!originalPositions.TryGetValue(targetObject, out relativeOriginalPosition)) yield break;
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < pulseDuration)
+        {
+            float jiggleAmount = Mathf.Sin(elapsedTime * Mathf.PI * 4) * 0.1f; // Adjust frequency and amplitude as needed
+            Vector3 currentBasePosition = player.position + (relativeOriginalPosition - player.position).normalized * radius;
+            targetObject.transform.position = currentBasePosition + Random.insideUnitSphere * jiggleAmount;
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        Vector3 resetBasePosition = player.position + (relativeOriginalPosition - player.position).normalized * radius;
+        targetObject.transform.position = resetBasePosition; // Reset to the recalculated position
+    }
+
+    List<int> GetRandomObjectIndices(int count, bool selectCenter)
+    {
+        List<int> validIndices = new List<int>();
+        int startIndex = startRow * columns; // Calculate the first object index in the start row
+
+        for (int i = startIndex; i < spawnedObjects.Count; i++)
         {
             Vector3 toObject = (spawnedObjects[i].transform.position - player.position).normalized;
-            float dotProduct = Vector3.Dot(playerDirection, toObject); // Closer to 1 means directly in front
+            float dotProduct = Vector3.Dot(player.forward, toObject);
 
-            if (dotProduct > 0f) // Only consider objects in front of the player
+            // Group objects based on dot product thresholds
+            if (selectCenter && dotProduct >= centerThreshold)
             {
-                frontIndices.Add(i);
+                validIndices.Add(i);
+            }
+            else if (!selectCenter && dotProduct < edgeThreshold)
+            {
+                validIndices.Add(i);
             }
         }
 
-        if (frontIndices.Count > 0)
+        // Shuffle and limit to `count` indices
+        for (int i = 0; i < validIndices.Count; i++)
         {
-            // Randomly select an index from the filtered list
-            return frontIndices[Random.Range(0, frontIndices.Count)];
+            int randomIndex = Random.Range(0, validIndices.Count);
+            int temp = validIndices[i];
+            validIndices[i] = validIndices[randomIndex];
+            validIndices[randomIndex] = temp;
         }
-        else
-        {
-            // Fallback in case no objects are in front (shouldn't happen unless objects are behind the player entirely)
-            return Random.Range(0, spawnedObjects.Count);
-        }
+
+        return validIndices.GetRange(0, Mathf.Min(count, validIndices.Count));
     }
 
     Vector3 SphericalToCartesian(float theta, float phi, Vector3 pole)
     {
-        // Rotate spherical coordinates to align with the pole direction
-        Vector3 defaultPole = Vector3.up; // Default pole is the y-axis
+        Vector3 defaultPole = Vector3.up;
         Quaternion rotation = Quaternion.FromToRotation(defaultPole, pole);
-
-        // Compute Cartesian coordinates
         Vector3 point = new Vector3(
             Mathf.Sin(theta) * Mathf.Cos(phi),
             Mathf.Cos(theta),
             Mathf.Sin(theta) * Mathf.Sin(phi)
         );
-
         return rotation * point;
     }
 }

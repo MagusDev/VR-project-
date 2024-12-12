@@ -79,7 +79,7 @@ public class SphericalGridSpawner : MonoBehaviour
             }
 
             // Wait for a specific time before changing colors again
-            yield return new WaitForSeconds(2f); // Change every 2 seconds (or adjust as needed)
+            yield return new WaitForSeconds(10f); // Change every 2 seconds (or adjust as needed)
         }
     }
 
