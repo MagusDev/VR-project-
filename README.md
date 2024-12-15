@@ -8,7 +8,8 @@ This project is a VR application designed to study and demonstrate aspects of pe
 
 ### Main Menu
 - The application starts with a *Main Menu* scene, allowing users to select one of four experiments to explore. There is a brief introduction of the project in this scene, together with 4 entrance linked to four individual scenes.
-![[WhatsApp Image 2024-12-15 at 17.25.57_a3c1c099 2.jpg]]
+![WhatsApp Image 2024-12-15 at 17 25 57_ba3ec23b](https://github.com/user-attachments/assets/fbe0db94-2a2a-4fcf-8d35-2ec7a3d582fe)
+
 
 ### Experiments
 There're four scenes to test features of peripheral vision. Each of the scene include a spherical grid of balls, different behaviours are applied to the grid in different scenes to assess peripheral vision characteristics. Instructions also included in each of the scene.
