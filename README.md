@@ -34,7 +34,9 @@ There're four scenes to test features of peripheral vision. Each of the scene in
    - Goal: To test if peripheral vision is less sensitive to motion in brighter environment than dark environment.
    - Expected result: Players find it harder to detect motion than scene 3.
      
-![ScreenRecording2024-12-15180833-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/8655e208-f2de-44d2-80b3-31d1c1a49843)
+<div style="text-align: center;">
+    <img src="https://github.com/user-attachments/assets/8655e208-f2de-44d2-80b3-31d1c1a49843" alt="Screen Recording" />
+</div>
 
 ### Exit to Main Menu
 - Each experiment scene features an *Exit Button* that allows users to return to the main menu after completing their observation.
